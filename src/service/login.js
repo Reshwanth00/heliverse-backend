@@ -9,13 +9,15 @@ const checkUser = async (req ) => {
         if (foundUser) {
             const isPasswordCorrect = await bcrypt.compare(password, foundUser.password);
             if (isPasswordCorrect) {
-                return { message: 'Login successful', data: foundUser };
+                return { message: 'Login successful', user: foundUser };
             } else {
                 return { error: 'Password is incorrect' };
             }
         } else {
             const hashedPassword = await bcrypt.hash(password, 10);
+            const userCount = await user.countDocuments({});
             const newUser = new user({
+                id: userCount + 1, 
                 email: email,
                 password: hashedPassword,
                 role: 'New'
@@ -29,9 +31,10 @@ const checkUser = async (req ) => {
     }
 };
 
+
 const registerUser = async (req) => {
     try {
-        const { id, name , role } = req;
+        const { id, name, role } = req;
         const userToUpdate = await user.findOne({ id });
         if (!userToUpdate) {
             throw new Error(`User with id ${id} not found`);
@@ -61,7 +64,7 @@ const deleteUser = async (req) => {
     }
 };
 
-const updateUser = async ({ id , body }) => {
+const updateUser = async ({ req , body }) => {
     try {
         const { id } = req;
         const userToUpdate = await user.findOne({ id });
